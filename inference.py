@@ -126,7 +126,7 @@ def inference(args):
 
     dataset = ImageFolderDataset(args["test_images_dir"], transform=transform)
 
-    for task in tqdm(range(data_manager.nb_tasks)):
+    for task in tqdm(range(9, data_manager.nb_tasks)):
         model.set_eval_model(data_manager)
 
         # Save model checkpoint after each task

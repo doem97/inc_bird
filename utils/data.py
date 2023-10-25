@@ -290,7 +290,7 @@ class cs701(iData):
         self.train_trsf = build_transform(True, args)
         self.test_trsf = build_transform(False, args)
         self.common_trsf = []
-        self.class_order = np.arange(200).tolist()
+        self.class_order = np.arange(100).tolist()
 
     def download_data(self):
         # assert 0, "You should specify the folder of your dataset"
@@ -313,7 +313,7 @@ class cubcomb(iData):
         self.train_trsf = build_transform(True, args)
         self.test_trsf = build_transform(False, args)
         self.common_trsf = []
-        self.class_order = np.arange(200).tolist()
+        self.class_order = np.arange(100).tolist()
 
     def download_data(self):
         # assert 0, "You should specify the folder of your dataset"

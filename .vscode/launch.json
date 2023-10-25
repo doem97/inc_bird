@@ -23,8 +23,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/inference.py",
             "args": [
-              "--config=./configs/foster_cs701_lr8e-4_mem1800_mpc20.json",
-              "--config_id=foster_cs701_lr8e-4_mem1800_mpc20"
+              "--config=./configs/foster_cubcomb_lr1e-3_mpc25_bs32_im21k.json",
+              "--config_id=foster_cubcomb_lr1e-3_mpc25_bs32_im21k"
             ],
             "env": {
               "CUDA_VISIBLE_DEVICES": "0"

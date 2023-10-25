@@ -21,6 +21,10 @@ def get_backbone(args, pretrained=False):
         model = timm.create_model("caformer_m36.sail_in22k_ft_in1k_384", pretrained=True, num_classes=0)
         model.out_dim = 576
         return model.eval()
+    elif name == "caformer_m36.sail_in1k_384":
+        model = timm.create_model("caformer_m36.sail_in1k_384", pretrained=True, num_classes=0)
+        model.out_dim = 576
+        return model.eval()
 
     elif '_memo' in name:
         if args["model_name"] == "memo":
