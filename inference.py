@@ -104,9 +104,9 @@ def inference(args):
     transform = transforms.Compose(
         [
             transforms.Resize(
-                256, interpolation=3
+                args["img_size"], interpolation=3
             ),  # to maintain the same ratio w.r.t. 224 images
-            transforms.CenterCrop(224),
+            transforms.CenterCrop(args["img_size"]),
             transforms.ToTensor(),
         ]
     )
