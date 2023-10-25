@@ -7,7 +7,7 @@ def get_model(model_name, args):
     elif name == "adam_ssf":
         from models.adam_ssf import Learner
     elif name == "adam_vpt":
-        from models.adam_vpt import Learner 
+        from models.adam_vpt import Learner
     elif name == "adam_adapter":
         from models.adam_adapter import Learner
     elif name == "l2p":
@@ -30,5 +30,5 @@ def get_model(model_name, args):
         from models.memo import Learner
     else:
         assert 0
-    
+
     return Learner(args)

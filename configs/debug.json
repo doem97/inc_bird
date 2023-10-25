@@ -8,8 +8,9 @@
     "init_cls": 10,
     "increment": 10,
     "model_name": "foster",
-    "backbone_type": "caformer_m36.sail_in1k_384",
-    "img_size": 384,
+    "backbone_type": "repvit_m3.dist_in1k",
+    "img_size": 224,
+    "out_dim": 512,
     "device": [
         "0"
     ],
@@ -29,7 +30,7 @@
     "boosting_epochs": 20,
     "compression_epochs": 20,
     "lr": 1e-3,
-    "batch_size": 16,
+    "batch_size": 32,
     "weight_decay": 5e-4,
     "num_workers": 8,
     "T": 2
