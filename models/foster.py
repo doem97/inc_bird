@@ -89,6 +89,33 @@ class Learner(BaseLearner):
         if len(self._multiple_gpus) > 1:
             self._network = self._network.module
 
+    def set_eval_model(self, data_manager):
+        print("start to load model...")
+        self.data_manager = data_manager
+        self._cur_task += 1
+        if self._cur_task > 1:
+            self._network = self._snet
+        self._total_classes = self._known_classes + data_manager.get_task_size(
+            self._cur_task
+        )
+        self._network.update_fc(self._total_classes)
+        self._network_module_ptr = self._network
+
+        if self._cur_task > 0:
+            for p in self._network.backbones[0].parameters():
+                p.requires_grad = False
+            for p in self._network.oldfc.parameters():
+                p.requires_grad = False
+
+        if len(self._multiple_gpus) > 1:
+            self._network = nn.DataParallel(self._network, self._multiple_gpus)
+        self._infer()
+        self.build_rehearsal_memory(data_manager, self.samples_per_class)
+        if len(self._multiple_gpus) > 1:
+            self._network = self._network.module
+
+        print("loading model arch finished")
+
     def train(self):
         self._network_module_ptr.train()
         self._network_module_ptr.backbones[-1].train()
@@ -164,6 +191,13 @@ class Learner(BaseLearner):
             logging.info("per cls weights : {}".format(per_cls_weights))
             self.per_cls_weights = torch.FloatTensor(per_cls_weights).to(self._device)
             self._feature_compression(train_loader, test_loader)
+
+    def _infer(self):
+        self._network.to(self._device)
+        if hasattr(self._network, "module"):
+            self._network_module_ptr = self._network.module
+        if self._cur_task > 0:
+            self._feature_compression_infer()
 
     def _init_train(self, train_loader, test_loader, optimizer, scheduler):
         prog_bar = tqdm(range(self.args["init_epochs"]))
@@ -283,6 +317,22 @@ class Learner(BaseLearner):
                 )
             prog_bar.set_description(info)
         logging.info(info)
+
+    def _feature_compression_infer(self):
+        self._snet = FOSTERNet(self.args, True)
+        self._snet.update_fc(self._total_classes)
+        if len(self._multiple_gpus) > 1:
+            self._snet = nn.DataParallel(self._snet, self._multiple_gpus)
+        if hasattr(self._snet, "module"):
+            self._snet_module_ptr = self._snet.module
+        else:
+            self._snet_module_ptr = self._snet
+        self._snet.to(self._device)
+        self._snet_module_ptr.backbones[0].load_state_dict(
+            self._network_module_ptr.backbones[0].state_dict()
+        )
+        self._snet_module_ptr.copy_fc(self._network_module_ptr.oldfc)
+        self._network.eval()
 
     def _feature_compression(self, train_loader, test_loader):
         self._snet = FOSTERNet(self.args, True)

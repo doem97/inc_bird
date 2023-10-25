@@ -4,19 +4,19 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from utils.data import (
-    iCIFAR10,
-    iCIFAR100,
-    iImageNet100,
-    iImageNet1000,
-    iCIFAR224,
-    iImageNetR,
-    iImageNetA,
+    # iCIFAR10,
+    # iCIFAR100,
+    # iImageNet100,
+    # iImageNet1000,
+    # iCIFAR224,
+    # iImageNetR,
+    # iImageNetA,
     CUB,
     cs701,
     cubcomb,
-    objectnet,
-    omnibenchmark,
-    vtab,
+    # objectnet,
+    # omnibenchmark,
+    # vtab,
 )
 
 
@@ -229,32 +229,32 @@ def _map_new_class_index(y, order):
 
 def _get_idata(dataset_name, args=None):
     name = dataset_name.lower()
-    if name == "cifar10":
-        return iCIFAR10()
-    elif name == "cifar100":
-        return iCIFAR100()
-    elif name == "imagenet1000":
-        return iImageNet1000()
-    elif name == "imagenet100":
-        return iImageNet100()
-    elif name == "cifar224":
-        return iCIFAR224(args)
-    elif name == "imagenetr":
-        return iImageNetR(args)
-    elif name == "imageneta":
-        return iImageNetA()
-    elif name == "cub":
-        return CUB()
+    # if name == "cifar10":
+    #     return iCIFAR10()
+    # elif name == "cifar100":
+    #     return iCIFAR100()
+    # elif name == "imagenet1000":
+    #     return iImageNet1000()
+    # elif name == "imagenet100":
+    #     return iImageNet100()
+    # elif name == "cifar224":
+    #     return iCIFAR224(args)
+    # elif name == "imagenetr":
+    #     return iImageNetR(args)
+    # elif name == "imageneta":
+    #     return iImageNetA()
+    if name == "cub":
+        return CUB(args)
     elif name == "cs701":
-        return cs701()
+        return cs701(args)
     elif name == "cubcomb":
         return cubcomb()
-    elif name == "objectnet":
-        return objectnet()
-    elif name == "omnibenchmark":
-        return omnibenchmark()
-    elif name == "vtab":
-        return vtab()
+    # elif name == "objectnet":
+    #     return objectnet()
+    # elif name == "omnibenchmark":
+    #     return omnibenchmark()
+    # elif name == "vtab":
+    #     return vtab()
 
     else:
         raise NotImplementedError("Unknown dataset {}.".format(dataset_name))

@@ -10,12 +10,16 @@ def get_backbone(args, pretrained=False):
     name = args["backbone_type"].lower()
     # SimpleCIL or SimpleCIL w/ Finetune
     if name == "pretrained_vit_b16_224" or name == "vit_base_patch16_224":
-        model = timm.create_model("vit_base_patch16_224",pretrained=True, num_classes=0)
+        model = timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=0)
         model.out_dim = 768
         return model.eval()
     elif name == "pretrained_vit_b16_224_in21k" or name == "vit_base_patch16_224_in21k":
-        model = timm.create_model("vit_base_patch16_224_in21k",pretrained=True, num_classes=0)
+        model = timm.create_model("vit_base_patch16_224_in21k", pretrained=True, num_classes=0)
         model.out_dim = 768
+        return model.eval()
+    elif name == "caformer_m36.sail_in22k_ft_in1k_384":
+        model = timm.create_model("caformer_m36.sail_in22k_ft_in1k_384", pretrained=True, num_classes=0)
+        model.out_dim = 576
         return model.eval()
 
     elif '_memo' in name:

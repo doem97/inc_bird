@@ -3,16 +3,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "pilot",
+            "name": "pilot:train",
             "type": "python",
             "request": "launch",
             "program": "./main.py",
-            "args": ["--config", "./configs/foster_cub.json"],  // Update with the actual path
+            "args": [
+                "--config=./configs/debug.json",
+                "--config_id=debug"
+            ],  // Update with the actual path
             "env": {
-                "CUDA_VISIBLE_DEVICES": "5"
+                "CUDA_VISIBLE_DEVICES": "0"
             },
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+        {
+            "name": "pilot:inference",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/inference.py",
+            "args": [
+              "--config=./configs/foster_cs701_lr8e-4_mem1800_mpc20.json",
+              "--config_id=foster_cs701_lr8e-4_mem1800_mpc20"
+            ],
+            "env": {
+              "CUDA_VISIBLE_DEVICES": "0"
+            }
         }
     ]
 }    
