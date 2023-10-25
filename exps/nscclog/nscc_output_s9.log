@@ -1,0 +1,76 @@
+config: ./configs/foster_caf22ft1k_384_cs701_lr1e-3_mpc25_bs16.json
+config_id: foster_caf22ft1k_384_cs701_lr1e-3_mpc25_bs16
+test_images_dir: ./data/cs701/raw/val
+prefix: cil
+dataset: cs701
+memory_size: 2000
+memory_per_class: 25
+fixed_memory: True
+shuffle: False
+init_cls: 10
+increment: 10
+model_name: foster
+backbone_type: caformer_m36.sail_in22k_ft_in1k_384
+img_size: 384
+device: [device(type='cuda', index=0)]
+seed: 42
+beta1: 0.96
+beta2: 0.97
+oofc: ft
+is_teacher_wa: False
+is_student_wa: False
+lambda_okd: 1
+wa_value: 1
+init_epochs: 20
+init_lr: 0.001
+init_weight_decay: 0.0005
+boosting_epochs: 20
+compression_epochs: 20
+lr: 0.001
+batch_size: 16
+weight_decay: 0.0005
+num_workers: 8
+T: 2
+  0%|          | 0/20 [00:00<?, ?it/s]start to load model...
+  5%|▌         | 1/20 [01:31<28:55, 91.32s/it]loading model arch finished
+start to load model...
+ 10%|█         | 2/20 [02:43<24:03, 80.18s/it]loading model arch finished
+start to load model...
+ 15%|█▌        | 3/20 [04:10<23:37, 83.36s/it]loading model arch finished
+start to load model...
+ 20%|██        | 4/20 [05:40<22:53, 85.87s/it]loading model arch finished
+start to load model...
+ 25%|██▌       | 5/20 [07:18<22:33, 90.21s/it]loading model arch finished
+start to load model...
+ 25%|██▌       | 5/20 [08:25<25:17, 101.18s/it]
+loading model arch finished
+Traceback (most recent call last):
+  File "/home/users/smu/zichent1/study/pilot/inference.py", line 221, in <module>
+    main(args)
+  File "/home/users/smu/zichent1/study/pilot/inference.py", line 195, in main
+    inference(args)
+  File "/home/users/smu/zichent1/study/pilot/inference.py", line 139, in inference
+    checkpoint = torch.load(checkpoint_filename)
+  File "/home/users/smu/zichent1/.conda/envs/study/lib/python3.9/site-packages/torch/serialization.py", line 791, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/home/users/smu/zichent1/.conda/envs/study/lib/python3.9/site-packages/torch/serialization.py", line 271, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/home/users/smu/zichent1/.conda/envs/study/lib/python3.9/site-packages/torch/serialization.py", line 252, in __init__
+    super().__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: './outputs/foster_caf22ft1k_384_cs701_lr1e-3_mpc25_bs16/foster_cs701_10/task_5.pkl'
+======================================================================================
+
+			Resource Usage on 2023-10-25 16:02:21.860804:
+
+	JobId: 4123950.pbs101  
+	Project: 21026844 
+	Exit Status: 1
+	NCPUs Requested: 16				NCPUs Used: 16
+							CPU Time Used: 00:38:53
+	Memory Requested: 110gb 			Memory Used: 16254480kb
+							Vmem Used: 99081720kb
+	Walltime requested: 24:00:00 			Walltime Used: 00:09:11
+	
+	Execution Nodes Used: (x1000c2s0b0n0:ngpus=1:ncpus=16:mem=115343360kb)
+	
+ ======================================================================================
