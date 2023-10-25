@@ -248,7 +248,7 @@ def _get_idata(dataset_name, args=None):
     elif name == "cs701":
         return cs701(args)
     elif name == "cubcomb":
-        return cubcomb()
+        return cubcomb(args)
     # elif name == "objectnet":
     #     return objectnet()
     # elif name == "omnibenchmark":

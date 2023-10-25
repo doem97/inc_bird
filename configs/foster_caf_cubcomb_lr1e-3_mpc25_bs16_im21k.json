@@ -1,6 +1,6 @@
 {
     "prefix": "cil",
-    "dataset": "cubcs",
+    "dataset": "cubcomb",
     "memory_size": 2000,
     "memory_per_class": 25,
     "fixed_memory": true,
