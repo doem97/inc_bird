@@ -7,7 +7,7 @@
 #PBS -N dso
 #PBS -m be
 #PBS -M doem1997@gmail.com
-#PBS -o ./exps/nscclog/nscc_output_s9.log
+#PBS -o ./exps/nscclog/nscc_output_s12.log
 
 # Commands start here
 module load anaconda3/2022.10
@@ -19,6 +19,6 @@ cd ./study/pilot
 # Date: 25 Oct 2023, 9:04PM
 # **********************************************************************************
 
-python main.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs16.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs16"
+python main.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs24"
 sleep 20
-python inference.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs16.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs16"
+python inference.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs24"

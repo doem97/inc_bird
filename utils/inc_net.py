@@ -6,209 +6,222 @@ from backbone.linears import SimpleLinear, SplitCosineLinear, CosineLinear
 from backbone.prompt import CodaPrompt
 import timm
 
+
 def get_backbone(args, pretrained=False):
     name = args["backbone_type"].lower()
     # SimpleCIL or SimpleCIL w/ Finetune
     if name == "pretrained_vit_b16_224" or name == "vit_base_patch16_224":
-        model = timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=0)
+        model = timm.create_model(
+            "vit_base_patch16_224", pretrained=True, num_classes=0
+        )
         model.out_dim = 768
         return model.eval()
     elif name == "pretrained_vit_b16_224_in21k" or name == "vit_base_patch16_224_in21k":
-        model = timm.create_model("vit_base_patch16_224_in21k", pretrained=True, num_classes=0)
+        model = timm.create_model(
+            "vit_base_patch16_224_in21k", pretrained=True, num_classes=0
+        )
         model.out_dim = 768
         return model.eval()
     elif name == "caformer_m36.sail_in22k_ft_in1k_384":
-        model = timm.create_model("caformer_m36.sail_in22k_ft_in1k_384", pretrained=True, num_classes=0)
+        model = timm.create_model(
+            "caformer_m36.sail_in22k_ft_in1k_384", pretrained=True, num_classes=0
+        )
         model.out_dim = 576
         return model.eval()
     elif name == "caformer_m36.sail_in1k_384":
-        model = timm.create_model("caformer_m36.sail_in1k_384", pretrained=True, num_classes=0)
+        model = timm.create_model(
+            "caformer_m36.sail_in1k_384", pretrained=True, num_classes=0
+        )
         model.out_dim = 576
         return model.eval()
-
-    elif '_memo' in name:
-        if args["model_name"] == "memo":
-            from backbone import vision_transformer_memo
-            _basenet, _adaptive_net = timm.create_model("vit_base_patch16_224_memo", pretrained=True, num_classes=0)
-            _basenet.out_dim = 768
-            _adaptive_net.out_dim = 768
-            return _basenet, _adaptive_net
-    # SSF 
-    elif '_ssf' in name:
-        if args["model_name"] == "adam_ssf":
-            from backbone import vision_transformer_ssf
-            if name == "pretrained_vit_b16_224_ssf":
-                model = timm.create_model("vit_base_patch16_224_ssf", pretrained=True, num_classes=0)
-                model.out_dim = 768
-            elif name == "pretrained_vit_b16_224_in21k_ssf":
-                model = timm.create_model("vit_base_patch16_224_in21k_ssf", pretrained=True, num_classes=0)
-                model.out_dim = 768
-            return model.eval()
-        else:
-            raise NotImplementedError("Inconsistent model name and model type")
-    
-    # VPT
-    elif '_vpt' in name:
-        if args["model_name"] == "adam_vpt":
-            from backbone.vpt import build_promptmodel
-            if name == "pretrained_vit_b16_224_vpt":
-                basicmodelname = "vit_base_patch16_224" 
-            elif name == "pretrained_vit_b16_224_in21k_vpt":
-                basicmodelname = "vit_base_patch16_224_in21k"
-            
-            print("modelname,", name, "basicmodelname", basicmodelname)
-            VPT_type = "Deep"
-            if args["vpt_type"] == 'shallow':
-                VPT_type = "Shallow"
-            Prompt_Token_num = args["prompt_token_num"]
-
-            model = build_promptmodel(modelname=basicmodelname, Prompt_Token_num=Prompt_Token_num, VPT_type=VPT_type)
-            prompt_state_dict = model.obtain_prompt()
-            model.load_prompt(prompt_state_dict)
-            model.out_dim = 768
-            return model.eval()
-        else:
-            raise NotImplementedError("Inconsistent model name and model type")
-
-    elif '_adapter' in name:
-        ffn_num = args["ffn_num"]
-        if args["model_name"] == "adam_adapter" :
-            from backbone import vision_transformer_adapter
-            from easydict import EasyDict
-            tuning_config = EasyDict(
-                # AdaptFormer
-                ffn_adapt=True,
-                ffn_option="parallel",
-                ffn_adapter_layernorm_option="none",
-                ffn_adapter_init_option="lora",
-                ffn_adapter_scalar="0.1",
-                ffn_num=ffn_num,
-                d_model=768,
-                # VPT related
-                vpt_on=False,
-                vpt_num=0,
-            )
-            if name == "pretrained_vit_b16_224_adapter":
-                model = vision_transformer_adapter.vit_base_patch16_224_adapter(num_classes=0,
-                    global_pool=False, drop_path_rate=0.0, tuning_config=tuning_config)
-                model.out_dim=768
-            elif name == "pretrained_vit_b16_224_in21k_adapter":
-                model = vision_transformer_adapter.vit_base_patch16_224_in21k_adapter(num_classes=0,
-                    global_pool=False, drop_path_rate=0.0, tuning_config=tuning_config)
-                model.out_dim=768
-            else:
-                raise NotImplementedError("Unknown type {}".format(name))
-            return model.eval()
-        else:
-            raise NotImplementedError("Inconsistent model name and model type")
-    # L2P
-    elif '_l2p' in name:
-        if args["model_name"] == "l2p":
-            from backbone import vision_transformer_l2p
-            model = timm.create_model(
-                args["backbone_type"],
-                pretrained=args["pretrained"],
-                num_classes=args["nb_classes"],
-                drop_rate=args["drop"],
-                drop_path_rate=args["drop_path"],
-                drop_block_rate=None,
-                prompt_length=args["length"],
-                embedding_key=args["embedding_key"],
-                prompt_init=args["prompt_key_init"],
-                prompt_pool=args["prompt_pool"],
-                prompt_key=args["prompt_key"],
-                pool_size=args["size"],
-                top_k=args["top_k"],
-                batchwise_prompt=args["batchwise_prompt"],
-                prompt_key_init=args["prompt_key_init"],
-                head_type=args["head_type"],
-                use_prompt_mask=args["use_prompt_mask"],
-            )
-            return model
-        else:
-            raise NotImplementedError("Inconsistent model name and model type")
-    # dualprompt
-    elif '_dualprompt' in name:
-        if args["model_name"] == "dualprompt":
-            from backbone import vision_transformer_dual_prompt
-            model = timm.create_model(
-                args["backbone_type"],
-                pretrained=args["pretrained"],
-                num_classes=args["nb_classes"],
-                drop_rate=args["drop"],
-                drop_path_rate=args["drop_path"],
-                drop_block_rate=None,
-                prompt_length=args["length"],
-                embedding_key=args["embedding_key"],
-                prompt_init=args["prompt_key_init"],
-                prompt_pool=args["prompt_pool"],
-                prompt_key=args["prompt_key"],
-                pool_size=args["size"],
-                top_k=args["top_k"],
-                batchwise_prompt=args["batchwise_prompt"],
-                prompt_key_init=args["prompt_key_init"],
-                head_type=args["head_type"],
-                use_prompt_mask=args["use_prompt_mask"],
-                use_g_prompt=args["use_g_prompt"],
-                g_prompt_length=args["g_prompt_length"],
-                g_prompt_layer_idx=args["g_prompt_layer_idx"],
-                use_prefix_tune_for_g_prompt=args["use_prefix_tune_for_g_prompt"],
-                use_e_prompt=args["use_e_prompt"],
-                e_prompt_layer_idx=args["e_prompt_layer_idx"],
-                use_prefix_tune_for_e_prompt=args["use_prefix_tune_for_e_prompt"],
-                same_key_value=args["same_key_value"],
-            )
-            return model
-        else:
-            raise NotImplementedError("Inconsistent model name and model type")
-    # Coda_Prompt
-    elif '_coda_prompt' in name:
-        if args["model_name"] == "coda_prompt":
-            from backbone import vision_transformer_coda_prompt
-            model = timm.create_model(args["backbone_type"], pretrained=args["pretrained"])
-            # model = vision_transformer_coda_prompt.VisionTransformer(img_size=224, patch_size=16, embed_dim=768, depth=12,
-            #                 num_heads=12, ckpt_layer=0,
-            #                 drop_path_rate=0)
-            # from timm.models import vit_base_patch16_224
-            # load_dict = vit_base_patch16_224(pretrained=True).state_dict()
-            # del load_dict['head.weight']; del load_dict['head.bias']
-            # model.load_state_dict(load_dict)
-            return model
-        else:
-            raise NotImplementedError("Inconsistent model name and model type")
     else:
-        raise NotImplementedError("Unknown type {}".format(name))
+        model = timm.create_model(name, pretrained=True, num_classes=0)
+        model.out_dim = args["out_dim"]
+        return model.eval()
+
+    # elif '_memo' in name:
+    #     if args["model_name"] == "memo":
+    #         from backbone import vision_transformer_memo
+    #         _basenet, _adaptive_net = timm.create_model("vit_base_patch16_224_memo", pretrained=True, num_classes=0)
+    #         _basenet.out_dim = 768
+    #         _adaptive_net.out_dim = 768
+    #         return _basenet, _adaptive_net
+    # # SSF
+    # elif '_ssf' in name:
+    #     if args["model_name"] == "adam_ssf":
+    #         from backbone import vision_transformer_ssf
+    #         if name == "pretrained_vit_b16_224_ssf":
+    #             model = timm.create_model("vit_base_patch16_224_ssf", pretrained=True, num_classes=0)
+    #             model.out_dim = 768
+    #         elif name == "pretrained_vit_b16_224_in21k_ssf":
+    #             model = timm.create_model("vit_base_patch16_224_in21k_ssf", pretrained=True, num_classes=0)
+    #             model.out_dim = 768
+    #         return model.eval()
+    #     else:
+    #         raise NotImplementedError("Inconsistent model name and model type")
+
+    # # VPT
+    # elif '_vpt' in name:
+    #     if args["model_name"] == "adam_vpt":
+    #         from backbone.vpt import build_promptmodel
+    #         if name == "pretrained_vit_b16_224_vpt":
+    #             basicmodelname = "vit_base_patch16_224"
+    #         elif name == "pretrained_vit_b16_224_in21k_vpt":
+    #             basicmodelname = "vit_base_patch16_224_in21k"
+
+    #         print("modelname,", name, "basicmodelname", basicmodelname)
+    #         VPT_type = "Deep"
+    #         if args["vpt_type"] == 'shallow':
+    #             VPT_type = "Shallow"
+    #         Prompt_Token_num = args["prompt_token_num"]
+
+    #         model = build_promptmodel(modelname=basicmodelname, Prompt_Token_num=Prompt_Token_num, VPT_type=VPT_type)
+    #         prompt_state_dict = model.obtain_prompt()
+    #         model.load_prompt(prompt_state_dict)
+    #         model.out_dim = 768
+    #         return model.eval()
+    #     else:
+    #         raise NotImplementedError("Inconsistent model name and model type")
+
+    # elif '_adapter' in name:
+    #     ffn_num = args["ffn_num"]
+    #     if args["model_name"] == "adam_adapter" :
+    #         from backbone import vision_transformer_adapter
+    #         from easydict import EasyDict
+    #         tuning_config = EasyDict(
+    #             # AdaptFormer
+    #             ffn_adapt=True,
+    #             ffn_option="parallel",
+    #             ffn_adapter_layernorm_option="none",
+    #             ffn_adapter_init_option="lora",
+    #             ffn_adapter_scalar="0.1",
+    #             ffn_num=ffn_num,
+    #             d_model=768,
+    #             # VPT related
+    #             vpt_on=False,
+    #             vpt_num=0,
+    #         )
+    #         if name == "pretrained_vit_b16_224_adapter":
+    #             model = vision_transformer_adapter.vit_base_patch16_224_adapter(num_classes=0,
+    #                 global_pool=False, drop_path_rate=0.0, tuning_config=tuning_config)
+    #             model.out_dim=768
+    #         elif name == "pretrained_vit_b16_224_in21k_adapter":
+    #             model = vision_transformer_adapter.vit_base_patch16_224_in21k_adapter(num_classes=0,
+    #                 global_pool=False, drop_path_rate=0.0, tuning_config=tuning_config)
+    #             model.out_dim=768
+    #         else:
+    #             raise NotImplementedError("Unknown type {}".format(name))
+    #         return model.eval()
+    #     else:
+    #         raise NotImplementedError("Inconsistent model name and model type")
+    # # L2P
+    # elif '_l2p' in name:
+    #     if args["model_name"] == "l2p":
+    #         from backbone import vision_transformer_l2p
+    #         model = timm.create_model(
+    #             args["backbone_type"],
+    #             pretrained=args["pretrained"],
+    #             num_classes=args["nb_classes"],
+    #             drop_rate=args["drop"],
+    #             drop_path_rate=args["drop_path"],
+    #             drop_block_rate=None,
+    #             prompt_length=args["length"],
+    #             embedding_key=args["embedding_key"],
+    #             prompt_init=args["prompt_key_init"],
+    #             prompt_pool=args["prompt_pool"],
+    #             prompt_key=args["prompt_key"],
+    #             pool_size=args["size"],
+    #             top_k=args["top_k"],
+    #             batchwise_prompt=args["batchwise_prompt"],
+    #             prompt_key_init=args["prompt_key_init"],
+    #             head_type=args["head_type"],
+    #             use_prompt_mask=args["use_prompt_mask"],
+    #         )
+    #         return model
+    #     else:
+    #         raise NotImplementedError("Inconsistent model name and model type")
+    # # dualprompt
+    # elif '_dualprompt' in name:
+    #     if args["model_name"] == "dualprompt":
+    #         from backbone import vision_transformer_dual_prompt
+    #         model = timm.create_model(
+    #             args["backbone_type"],
+    #             pretrained=args["pretrained"],
+    #             num_classes=args["nb_classes"],
+    #             drop_rate=args["drop"],
+    #             drop_path_rate=args["drop_path"],
+    #             drop_block_rate=None,
+    #             prompt_length=args["length"],
+    #             embedding_key=args["embedding_key"],
+    #             prompt_init=args["prompt_key_init"],
+    #             prompt_pool=args["prompt_pool"],
+    #             prompt_key=args["prompt_key"],
+    #             pool_size=args["size"],
+    #             top_k=args["top_k"],
+    #             batchwise_prompt=args["batchwise_prompt"],
+    #             prompt_key_init=args["prompt_key_init"],
+    #             head_type=args["head_type"],
+    #             use_prompt_mask=args["use_prompt_mask"],
+    #             use_g_prompt=args["use_g_prompt"],
+    #             g_prompt_length=args["g_prompt_length"],
+    #             g_prompt_layer_idx=args["g_prompt_layer_idx"],
+    #             use_prefix_tune_for_g_prompt=args["use_prefix_tune_for_g_prompt"],
+    #             use_e_prompt=args["use_e_prompt"],
+    #             e_prompt_layer_idx=args["e_prompt_layer_idx"],
+    #             use_prefix_tune_for_e_prompt=args["use_prefix_tune_for_e_prompt"],
+    #             same_key_value=args["same_key_value"],
+    #         )
+    #         return model
+    #     else:
+    #         raise NotImplementedError("Inconsistent model name and model type")
+    # # Coda_Prompt
+    # elif '_coda_prompt' in name:
+    #     if args["model_name"] == "coda_prompt":
+    #         from backbone import vision_transformer_coda_prompt
+    #         model = timm.create_model(args["backbone_type"], pretrained=args["pretrained"])
+    #         # model = vision_transformer_coda_prompt.VisionTransformer(img_size=224, patch_size=16, embed_dim=768, depth=12,
+    #         #                 num_heads=12, ckpt_layer=0,
+    #         #                 drop_path_rate=0)
+    #         # from timm.models import vit_base_patch16_224
+    #         # load_dict = vit_base_patch16_224(pretrained=True).state_dict()
+    #         # del load_dict['head.weight']; del load_dict['head.bias']
+    #         # model.load_state_dict(load_dict)
+    #         return model
+    #     else:
+    #         raise NotImplementedError("Inconsistent model name and model type")
+    # else:
+    #     raise NotImplementedError("Unknown type {}".format(name))
 
 
 class BaseNet(nn.Module):
     def __init__(self, args, pretrained):
         super(BaseNet, self).__init__()
 
-        print('This is for the BaseNet initialization.')
+        print("This is for the BaseNet initialization.")
         self.backbone = get_backbone(args, pretrained)
-        print('After BaseNet initialization.')
+        print("After BaseNet initialization.")
         self.fc = None
         self._device = args["device"][0]
 
-        if 'resnet' in args['backbone_type']:
-            self.model_type = 'cnn'
+        if "resnet" in args["backbone_type"]:
+            self.model_type = "cnn"
         else:
-            self.model_type = 'vit'
+            self.model_type = "vit"
 
     @property
     def feature_dim(self):
         return self.backbone.out_dim
 
     def extract_vector(self, x):
-        if self.model_type == 'cnn':
-            self.backbone(x)['features']
+        if self.model_type == "cnn":
+            self.backbone(x)["features"]
         else:
             return self.backbone(x)
 
     def forward(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             x = self.backbone(x)
-            out = self.fc(x['features'])
+            out = self.fc(x["features"])
             """
             {
                 'fmaps': [x_1, x_2, ..., x_n],
@@ -276,7 +289,7 @@ class IncrementalNet(BaseNet):
         return fc
 
     def forward(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             x = self.backbone(x)
             out = self.fc(x["features"])
             out.update(x)
@@ -324,7 +337,7 @@ class CosineIncrementalNet(BaseNet):
     def update_fc(self, nb_classes, task_num):
         fc = self.generate_fc(self.feature_dim, nb_classes)
         if self.fc is not None:
-            if task_num  ==  1:
+            if task_num == 1:
                 fc.fc1.weight.data = self.fc.weight.data
                 fc.sigma.data = self.fc.sigma.data
             else:
@@ -348,6 +361,7 @@ class CosineIncrementalNet(BaseNet):
 
         return fc
 
+
 class DERNet(nn.Module):
     def __init__(self, args, pretrained):
         super(DERNet, self).__init__()
@@ -360,10 +374,10 @@ class DERNet(nn.Module):
         self.task_sizes = []
         self.args = args
 
-        if 'resnet' in args['backbone_type']:
-            self.model_type = 'cnn'
+        if "resnet" in args["backbone_type"]:
+            self.model_type = "cnn"
         else:
-            self.model_type = 'vit'
+            self.model_type = "vit"
 
     @property
     def feature_dim(self):
@@ -372,7 +386,7 @@ class DERNet(nn.Module):
         return self.out_dim * len(self.backbones)
 
     def extract_vector(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             features = [backbone(x)["features"] for backbone in self.backbones]
         else:
             features = [backbone(x) for backbone in self.backbones]
@@ -380,7 +394,7 @@ class DERNet(nn.Module):
         return features
 
     def forward(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             features = [backbone(x)["features"] for backbone in self.backbones]
         else:
             features = [backbone(x) for backbone in self.backbones]
@@ -459,10 +473,11 @@ class DERNet(nn.Module):
         checkpoint_name = f"checkpoints/finetune_{args['csv_name']}_0.pkl"
         model_infos = torch.load(checkpoint_name)
         assert len(self.backbones) == 1
-        self.backbones[0].load_state_dict(model_infos['backbone'])
-        self.fc.load_state_dict(model_infos['fc'])
-        test_acc = model_infos['test_acc']
+        self.backbones[0].load_state_dict(model_infos["backbone"])
+        self.fc.load_state_dict(model_infos["fc"])
+        test_acc = model_infos["test_acc"]
         return test_acc
+
 
 class SimpleCosineIncrementalNet(BaseNet):
     def __init__(self, args, pretrained):
@@ -477,7 +492,14 @@ class SimpleCosineIncrementalNet(BaseNet):
             if nextperiod_initialization is not None:
                 weight = torch.cat([weight, nextperiod_initialization])
             else:
-                weight = torch.cat([weight, torch.zeros(nb_classes - nb_output, self.feature_dim).to(self._device)])
+                weight = torch.cat(
+                    [
+                        weight,
+                        torch.zeros(nb_classes - nb_output, self.feature_dim).to(
+                            self._device
+                        ),
+                    ]
+                )
             fc.weight = nn.Parameter(weight)
         del self.fc
         self.fc = fc
@@ -500,7 +522,14 @@ class SimpleVitNet(BaseNet):
             if nextperiod_initialization is not None:
                 weight = torch.cat([weight, nextperiod_initialization])
             else:
-                weight = torch.cat([weight, torch.zeros(nb_classes - nb_output, self.feature_dim).to(self._device)])
+                weight = torch.cat(
+                    [
+                        weight,
+                        torch.zeros(nb_classes - nb_output, self.feature_dim).to(
+                            self._device
+                        ),
+                    ]
+                )
             fc.weight = nn.Parameter(weight)
         del self.fc
         self.fc = fc
@@ -518,6 +547,7 @@ class SimpleVitNet(BaseNet):
         out.update({"features": x})
         return out
 
+
 # l2p and dualprompt
 class PromptVitNet(nn.Module):
     def __init__(self, args, pretrained):
@@ -527,7 +557,7 @@ class PromptVitNet(nn.Module):
             self.original_backbone = self.get_original_backbone(args)
         else:
             self.original_backbone = None
-            
+
     def get_original_backbone(self, args):
         return timm.create_model(
             args["backbone_type"],
@@ -541,12 +571,13 @@ class PromptVitNet(nn.Module):
     def forward(self, x, task_id=-1, train=False):
         with torch.no_grad():
             if self.original_backbone is not None:
-                cls_features = self.original_backbone(x)['pre_logits']
+                cls_features = self.original_backbone(x)["pre_logits"]
             else:
                 cls_features = None
 
         x = self.backbone(x, task_id=task_id, cls_features=cls_features, train=train)
         return x
+
 
 # coda_prompt
 class CodaPromptVitNet(nn.Module):
@@ -557,17 +588,17 @@ class CodaPromptVitNet(nn.Module):
         self.fc = nn.Linear(768, args["nb_classes"])
         self.prompt = CodaPrompt(768, args["nb_tasks"], args["prompt_param"])
 
-    # pen: get penultimate features  
+    # pen: get penultimate features
     def forward(self, x, pen=False, train=False):
         if self.prompt is not None:
             with torch.no_grad():
                 q, _ = self.backbone(x)
-                q = q[:,0,:]
+                q = q[:, 0, :]
             out, prompt_loss = self.backbone(x, prompt=self.prompt, q=q, train=train)
-            out = out[:,0,:]
+            out = out[:, 0, :]
         else:
             out, _ = self.backbone(x)
-            out = out[:,0,:]
+            out = out[:, 0, :]
         out = out.view(out.size(0), -1)
         if not pen:
             out = self.fc(out)
@@ -580,21 +611,23 @@ class CodaPromptVitNet(nn.Module):
 class MultiBranchCosineIncrementalNet(BaseNet):
     def __init__(self, args, pretrained):
         super().__init__(args, pretrained)
-        
+
         # no need the backbone.
-        
-        print('Clear the backbone in MultiBranchCosineIncrementalNet, since we are using self.backbones with dual branches')
-        self.backbone=torch.nn.Identity()
+
+        print(
+            "Clear the backbone in MultiBranchCosineIncrementalNet, since we are using self.backbones with dual branches"
+        )
+        self.backbone = torch.nn.Identity()
         for param in self.backbone.parameters():
             param.requires_grad = False
 
         self.backbones = nn.ModuleList()
-        self.args=args
-        
-        if 'resnet' in args['backbone_type']:
-            self.model_type='cnn'
+        self.args = args
+
+        if "resnet" in args["backbone_type"]:
+            self.model_type = "cnn"
         else:
-            self.model_type='vit'
+            self.model_type = "vit"
 
     def update_fc(self, nb_classes, nextperiod_initialization=None):
         fc = self.generate_fc(self._feature_dim, nb_classes).to(self._device)
@@ -605,7 +638,14 @@ class MultiBranchCosineIncrementalNet(BaseNet):
             if nextperiod_initialization is not None:
                 weight = torch.cat([weight, nextperiod_initialization])
             else:
-                weight = torch.cat([weight, torch.zeros(nb_classes - nb_output, self._feature_dim).to(self._device)])
+                weight = torch.cat(
+                    [
+                        weight,
+                        torch.zeros(nb_classes - nb_output, self._feature_dim).to(
+                            self._device
+                        ),
+                    ]
+                )
             fc.weight = nn.Parameter(weight)
         del self.fc
         self.fc = fc
@@ -613,13 +653,12 @@ class MultiBranchCosineIncrementalNet(BaseNet):
     def generate_fc(self, in_dim, out_dim):
         fc = CosineLinear(in_dim, out_dim)
         return fc
-    
 
     def forward(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             features = [backbone(x)["features"] for backbone in self.backbones]
         else:
-            features = [backbone(x) for backbone in self.backbones]       
+            features = [backbone(x) for backbone in self.backbones]
 
         features = torch.cat(features, 1)
         # import pdb; pdb.set_trace()
@@ -627,30 +666,35 @@ class MultiBranchCosineIncrementalNet(BaseNet):
         out.update({"features": features})
         return out
 
-    
     def construct_dual_branch_network(self, tuned_model):
-        if 'ssf' in self.args['backbone_type']:
-            newargs=copy.deepcopy(self.args)
-            newargs['backbone_type']=newargs['backbone_type'].replace('_ssf','')
-            print(newargs['backbone_type'])
-            self.backbones.append(get_backbone(newargs)) #pretrained model without scale
-        elif 'vpt' in self.args['backbone_type']:
-            newargs=copy.deepcopy(self.args)
-            newargs['backbone_type']=newargs['backbone_type'].replace('_vpt','')
-            print(newargs['backbone_type'])
-            self.backbones.append(get_backbone(newargs)) #pretrained model without vpt
-        elif 'adapter' in self.args['backbone_type']:
-            newargs=copy.deepcopy(self.args)
-            newargs['backbone_type']=newargs['backbone_type'].replace('_adapter','')
-            print(newargs['backbone_type'])
-            self.backbones.append(get_backbone(newargs)) #pretrained model without adapter
+        if "ssf" in self.args["backbone_type"]:
+            newargs = copy.deepcopy(self.args)
+            newargs["backbone_type"] = newargs["backbone_type"].replace("_ssf", "")
+            print(newargs["backbone_type"])
+            self.backbones.append(
+                get_backbone(newargs)
+            )  # pretrained model without scale
+        elif "vpt" in self.args["backbone_type"]:
+            newargs = copy.deepcopy(self.args)
+            newargs["backbone_type"] = newargs["backbone_type"].replace("_vpt", "")
+            print(newargs["backbone_type"])
+            self.backbones.append(get_backbone(newargs))  # pretrained model without vpt
+        elif "adapter" in self.args["backbone_type"]:
+            newargs = copy.deepcopy(self.args)
+            newargs["backbone_type"] = newargs["backbone_type"].replace("_adapter", "")
+            print(newargs["backbone_type"])
+            self.backbones.append(
+                get_backbone(newargs)
+            )  # pretrained model without adapter
         else:
-            self.backbones.append(get_backbone(self.args)) #the pretrained model itself
+            self.backbones.append(
+                get_backbone(self.args)
+            )  # the pretrained model itself
 
-        self.backbones.append(tuned_model.backbone) #adappted tuned model
-    
-        self._feature_dim = self.backbones[0].out_dim * len(self.backbones) 
-        self.fc=self.generate_fc(self._feature_dim,self.args['init_cls'])
+        self.backbones.append(tuned_model.backbone)  # adappted tuned model
+
+        self._feature_dim = self.backbones[0].out_dim * len(self.backbones)
+        self.fc = self.generate_fc(self._feature_dim, self.args["init_cls"])
 
 
 class FOSTERNet(nn.Module):
@@ -666,10 +710,10 @@ class FOSTERNet(nn.Module):
         self.oldfc = None
         self.args = args
 
-        if 'resnet' in args['backbone_type']:
-            self.model_type = 'cnn'
+        if "resnet" in args["backbone_type"]:
+            self.model_type = "cnn"
         else:
-            self.model_type = 'vit'
+            self.model_type = "vit"
 
     @property
     def feature_dim(self):
@@ -678,7 +722,7 @@ class FOSTERNet(nn.Module):
         return self.out_dim * len(self.backbones)
 
     def extract_vector(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             features = [backbone(x)["features"] for backbone in self.backbones]
         else:
             features = [backbone(x) for backbone in self.backbones]
@@ -686,7 +730,7 @@ class FOSTERNet(nn.Module):
         return features
 
     def forward(self, x):
-        if self.model_type == 'cnn':
+        if self.model_type == "cnn":
             features = [backbone(x)["features"] for backbone in self.backbones]
         else:
             features = [backbone(x) for backbone in self.backbones]
@@ -756,10 +800,10 @@ class FOSTERNet(nn.Module):
         gamma = meanold / meannew * (value ** (old / increment))
         logging.info("align weights, gamma = {} ".format(gamma))
         self.fc.weight.data[-increment:, :] *= gamma
-    
+
     def load_checkpoint(self, args):
         if args["init_cls"] == 50:
-            pkl_name = "{}_{}_{}_B{}_Inc{}".format( 
+            pkl_name = "{}_{}_{}_B{}_Inc{}".format(
                 args["dataset"],
                 args["seed"],
                 args["backbone_type"],
@@ -771,74 +815,83 @@ class FOSTERNet(nn.Module):
             checkpoint_name = f"checkpoints/finetune_{args['csv_name']}_0.pkl"
         model_infos = torch.load(checkpoint_name)
         assert len(self.backbones) == 1
-        self.backbones[0].load_state_dict(model_infos['backbone'])
-        self.fc.load_state_dict(model_infos['fc'])
-        test_acc = model_infos['test_acc']
+        self.backbones[0].load_state_dict(model_infos["backbone"])
+        self.fc.load_state_dict(model_infos["fc"])
+        test_acc = model_infos["test_acc"]
         return test_acc
+
 
 class AdaptiveNet(nn.Module):
     def __init__(self, args, pretrained):
         super(AdaptiveNet, self).__init__()
         self.backbone_type = args["backbone_type"]
-        self.TaskAgnosticExtractor , _ = get_backbone(args, pretrained) #Generalized blocks
+        self.TaskAgnosticExtractor, _ = get_backbone(
+            args, pretrained
+        )  # Generalized blocks
         self.TaskAgnosticExtractor.train()
-        self.AdaptiveExtractors = nn.ModuleList() #Specialized Blocks
-        self.pretrained=pretrained
-        self.out_dim=None
+        self.AdaptiveExtractors = nn.ModuleList()  # Specialized Blocks
+        self.pretrained = pretrained
+        self.out_dim = None
         self.fc = None
-        self.aux_fc=None
+        self.aux_fc = None
         self.task_sizes = []
-        self.args=args
+        self.args = args
 
     @property
     def feature_dim(self):
         if self.out_dim is None:
             return 0
-        return self.out_dim*len(self.AdaptiveExtractors)
-    
+        return self.out_dim * len(self.AdaptiveExtractors)
+
     def extract_vector(self, x):
         base_feature_map = self.TaskAgnosticExtractor(x)
-        features = [extractor(base_feature_map) for extractor in self.AdaptiveExtractors]
+        features = [
+            extractor(base_feature_map) for extractor in self.AdaptiveExtractors
+        ]
         features = torch.cat(features, 1)
         return features
 
     def forward(self, x):
         base_feature_map = self.TaskAgnosticExtractor(x)
-        features = [extractor(base_feature_map) for extractor in self.AdaptiveExtractors]
+        features = [
+            extractor(base_feature_map) for extractor in self.AdaptiveExtractors
+        ]
         features = torch.cat(features, 1)
-        out=self.fc(features) #{logits: self.fc(features)}
+        out = self.fc(features)  # {logits: self.fc(features)}
 
-        aux_logits=self.aux_fc(features[:,-self.out_dim:])["logits"] 
+        aux_logits = self.aux_fc(features[:, -self.out_dim :])["logits"]
 
-        out.update({"aux_logits":aux_logits,"features":features})
-        out.update({"base_features":base_feature_map})
+        out.update({"aux_logits": aux_logits, "features": features})
+        out.update({"base_features": base_feature_map})
         return out
-                
-        '''
+
+        """
         {
             'features': features
             'logits': logits
             'aux_logits':aux_logits
         }
-        '''
-        
-    def update_fc(self,nb_classes):
-        _ , _new_extractor = get_backbone(self.args, self.pretrained)
-        if len(self.AdaptiveExtractors)==0:
+        """
+
+    def update_fc(self, nb_classes):
+        _, _new_extractor = get_backbone(self.args, self.pretrained)
+        if len(self.AdaptiveExtractors) == 0:
             self.AdaptiveExtractors.append(_new_extractor)
         else:
             self.AdaptiveExtractors.append(_new_extractor)
-            self.AdaptiveExtractors[-1].load_state_dict(self.AdaptiveExtractors[-2].state_dict())
+            self.AdaptiveExtractors[-1].load_state_dict(
+                self.AdaptiveExtractors[-2].state_dict()
+            )
 
         if self.out_dim is None:
             # logging.info(self.AdaptiveExtractors[-1])
-            self.out_dim=self.AdaptiveExtractors[-1].out_dim        
-        fc = self.generate_fc(self.feature_dim, nb_classes)             
+            self.out_dim = self.AdaptiveExtractors[-1].out_dim
+        fc = self.generate_fc(self.feature_dim, nb_classes)
         if self.fc is not None:
             nb_output = self.fc.out_features
             weight = copy.deepcopy(self.fc.weight.data)
             bias = copy.deepcopy(self.fc.bias.data)
-            fc.weight.data[:nb_output,:self.feature_dim-self.out_dim] = weight
+            fc.weight.data[:nb_output, : self.feature_dim - self.out_dim] = weight
             fc.bias.data[:nb_output] = bias
 
         del self.fc
@@ -846,8 +899,8 @@ class AdaptiveNet(nn.Module):
 
         new_task_size = nb_classes - sum(self.task_sizes)
         self.task_sizes.append(new_task_size)
-        self.aux_fc=self.generate_fc(self.out_dim,new_task_size+1)
- 
+        self.aux_fc = self.generate_fc(self.out_dim, new_task_size + 1)
+
     def generate_fc(self, in_dim, out_dim):
         fc = SimpleLinear(in_dim, out_dim)
         return fc
@@ -856,18 +909,18 @@ class AdaptiveNet(nn.Module):
         return copy.deepcopy(self)
 
     def weight_align(self, increment):
-        weights=self.fc.weight.data
-        newnorm=(torch.norm(weights[-increment:,:],p=2,dim=1))
-        oldnorm=(torch.norm(weights[:-increment,:],p=2,dim=1))
-        meannew=torch.mean(newnorm)
-        meanold=torch.mean(oldnorm)
-        gamma=meanold/meannew
-        print('alignweights,gamma=',gamma)
-        self.fc.weight.data[-increment:,:]*=gamma
-    
+        weights = self.fc.weight.data
+        newnorm = torch.norm(weights[-increment:, :], p=2, dim=1)
+        oldnorm = torch.norm(weights[:-increment, :], p=2, dim=1)
+        meannew = torch.mean(newnorm)
+        meanold = torch.mean(oldnorm)
+        gamma = meanold / meannew
+        print("alignweights,gamma=", gamma)
+        self.fc.weight.data[-increment:, :] *= gamma
+
     def load_checkpoint(self, args):
         if args["init_cls"] == 50:
-            pkl_name = "{}_{}_{}_B{}_Inc{}".format( 
+            pkl_name = "{}_{}_{}_B{}_Inc{}".format(
                 args["dataset"],
                 args["seed"],
                 args["backbone_type"],
@@ -879,22 +932,18 @@ class AdaptiveNet(nn.Module):
             checkpoint_name = f"checkpoints/finetune_{args['csv_name']}_0.pkl"
         checkpoint_name = checkpoint_name.replace("memo_", "")
         model_infos = torch.load(checkpoint_name)
-        model_dict = model_infos['backbone']
+        model_dict = model_infos["backbone"]
         assert len(self.AdaptiveExtractors) == 1
 
         base_state_dict = self.TaskAgnosticExtractor.state_dict()
         adap_state_dict = self.AdaptiveExtractors[0].state_dict()
 
         pretrained_base_dict = {
-            k:v
-            for k, v in model_dict.items()
-            if k in base_state_dict
+            k: v for k, v in model_dict.items() if k in base_state_dict
         }
 
         pretrained_adap_dict = {
-            k:v
-            for k, v in model_dict.items()
-            if k in adap_state_dict
+            k: v for k, v in model_dict.items() if k in adap_state_dict
         }
 
         base_state_dict.update(pretrained_base_dict)
@@ -902,6 +951,6 @@ class AdaptiveNet(nn.Module):
 
         self.TaskAgnosticExtractor.load_state_dict(base_state_dict)
         self.AdaptiveExtractors[0].load_state_dict(adap_state_dict)
-        self.fc.load_state_dict(model_infos['fc'])
-        test_acc = model_infos['test_acc']
+        self.fc.load_state_dict(model_infos["fc"])
+        test_acc = model_infos["test_acc"]
         return test_acc
