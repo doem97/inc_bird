@@ -4,10 +4,10 @@
 #PBS -l select=1:ngpus=1
 #PBS -l walltime=24:00:00
 #PBS -P 21026844
-#PBS -N dso
+#PBS -N rerun_der
 #PBS -m be
 #PBS -M doem1997@gmail.com
-#PBS -o ./exps/nscclog/nscc_output_s12.log
+#PBS -o ./exps/nscclog/1026/s1_rerunder.log
 
 # Commands start here
 module load anaconda3/2022.10
@@ -19,6 +19,6 @@ cd ./study/pilot
 # Date: 25 Oct 2023, 9:04PM
 # **********************************************************************************
 
-python main.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs24"
+python main.py --config="./configs/aft/der_cs701_caf1k_bs24.json" --config_id="der_cs701_caf1k_bs24"
 sleep 20
-python inference.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs24"
+python inference.py --config="./configs/aft/der_cs701_caf1k_bs24.json" --config_id="der_cs701_caf1k_bs24"

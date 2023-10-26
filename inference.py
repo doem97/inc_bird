@@ -65,19 +65,6 @@ def load_json(setting_path):
     return param
 
 
-def setup_parser():
-    parser = argparse.ArgumentParser(
-        description="Reproduce of multiple pre-trained incremental learning algorthms."
-    )
-    parser.add_argument(
-        "--config",
-        type=str,
-        default="./exps/simplecil.json",
-        help="Json file of settings.",
-    )
-    return parser
-
-
 def predict_on_images(folder_path, model, transform):
     """Predict on a folder of images using the given model."""
     predictions = {}
@@ -126,7 +113,7 @@ def inference(args):
 
     dataset = ImageFolderDataset(args["test_images_dir"], transform=transform)
 
-    for task in tqdm(range(9, data_manager.nb_tasks)):
+    for task in tqdm(range(data_manager.nb_tasks)):
         model.set_eval_model(data_manager)
 
         # Save model checkpoint after each task

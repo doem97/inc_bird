@@ -4,7 +4,7 @@
 #PBS -l select=1:ngpus=1
 #PBS -l walltime=24:00:00
 #PBS -P 21026844
-#PBS -N dso
+#PBS -N eval_exps
 #PBS -m be
 #PBS -M doem1997@gmail.com
 #PBS -o ./exps/nscclog/nscc_output_s5.log
@@ -26,6 +26,7 @@ cd ./study/pilot
 python inference.py --config="./configs/big_sample/foster_caf22ft1k_384_cs701_lr1e-3_mpc25_bs16.json" --config_id="foster_caf22ft1k_384_cs701_lr1e-3_mpc25_bs16" &
 python inference.py --config="./configs/big_sample/foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+25_mpc25_bs16.json" --config_id="foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+25_mpc25_bs16" &
 python inference.py --config="./configs/big_sample/foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+25_mpc25_bs16.json" --config_id="foster_caf22ft1k_384_cs701_lr1e-3+30_lr1e-3+25_mpc25_bs16" &
-python inference.py --config="./configs/big_sample/foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+30_mpc25_bs16.json" --config_id="foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+30_mpc25_bs16"
+python inference.py --config="./configs/big_sample/foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+30_mpc25_bs16.json" --config_id="foster_caf22ft1k_384_cs701_lr1e-3+20_lr1e-3+30_mpc25_bs16" &
+python inference.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_bs24"
 
 wait
