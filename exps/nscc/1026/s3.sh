@@ -19,6 +19,6 @@ cd ./study/pilot
 # Date: 25 Oct 2023, 9:04PM
 # **********************************************************************************
 
-python main.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_30+40_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_30+40_bs24"
+python main.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_30+40_bs16.json" --config_id="foster_caf1k_384_cs701_lr1e-3_30+40_bs16"
 sleep 20
-python inference.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_30+40_bs24.json" --config_id="foster_caf1k_384_cs701_lr1e-3_30+40_bs24"
+python inference.py --config="./configs/aft/foster_caf1k_384_cs701_lr1e-3_30+40_bs16.json" --config_id="foster_caf1k_384_cs701_lr1e-3_30+40_bs16"
