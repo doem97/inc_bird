@@ -20,24 +20,15 @@ def train(args):
 
 def _train(args):
     init_cls = 0 if args["init_cls"] == args["increment"] else args["init_cls"]
-    logs_name = "logs/{}/{}_{}_{}".format(
-        args["config_id"], args["model_name"], args["dataset"], args["increment"]
-    )
+    logfilename = "./logs/{}.log".format(args["config_id"])
+    logs_dir = os.path.dirname(logfilename)
+    os.makedirs(logs_dir, exist_ok=True)
 
-    if not os.path.exists(logs_name):
-        os.makedirs(logs_name)
-
-    logfilename = "{}/{}_{}_{}".format(
-        logs_name,
-        args["prefix"],
-        args["seed"],
-        args["backbone_type"],
-    )
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(filename)s] => %(message)s",
         handlers=[
-            logging.FileHandler(filename=logfilename + ".log"),
+            logging.FileHandler(filename=logfilename),
             logging.StreamHandler(sys.stdout),
         ],
     )
@@ -70,11 +61,8 @@ def _train(args):
         model.after_task()
 
         # Save model checkpoint after each task
-        checkpoint_path = "./outputs/{}/{}_{}_{}".format(
-            args["config_id"], args["model_name"], args["dataset"], args["increment"]
-        )
-        if not os.path.exists(checkpoint_path):
-            os.makedirs(checkpoint_path)
+        checkpoint_path = "./outputs/{}/ckpts/".format(args["config_id"])
+        os.makedirs(checkpoint_path, exist_ok=True)
         checkpoint_prefix = "{}/task".format(checkpoint_path)
         model.save_checkpoint(checkpoint_prefix)
 

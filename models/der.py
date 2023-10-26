@@ -51,13 +51,19 @@ class Learner(BaseLearner):
             appendent=self._get_memory(),
         )
         self.train_loader = DataLoader(
-            train_dataset, batch_size=self.args["batch_size"], shuffle=True, num_workers=num_workers
+            train_dataset,
+            batch_size=self.args["batch_size"],
+            shuffle=True,
+            num_workers=num_workers,
         )
         test_dataset = data_manager.get_dataset(
             np.arange(0, self._total_classes), source="test", mode="test"
         )
         self.test_loader = DataLoader(
-            test_dataset, batch_size=self.args["batch_size"], shuffle=False, num_workers=num_workers
+            test_dataset,
+            batch_size=self.args["batch_size"],
+            shuffle=False,
+            num_workers=num_workers,
         )
 
         if len(self._multiple_gpus) > 1:
@@ -67,9 +73,58 @@ class Learner(BaseLearner):
         if len(self._multiple_gpus) > 1:
             self._network = self._network.module
 
+    def set_eval_model(self, data_manager):
+        self._cur_task += 1
+        self._total_classes = self._known_classes + data_manager.get_task_size(
+            self._cur_task
+        )
+        self._network.update_fc(self._total_classes)
+        logging.info(
+            "Inferencing on {}-{}".format(self._known_classes, self._total_classes)
+        )
+
+        if self._cur_task > 0:
+            for i in range(self._cur_task):
+                for p in self._network.backbones[i].parameters():
+                    p.requires_grad = False
+
+        logging.info("All params: {}".format(count_parameters(self._network)))
+        logging.info(
+            "Learnable params: {}".format(count_parameters(self._network, True))
+        )
+
+        train_dataset = data_manager.get_dataset(
+            np.arange(self._known_classes, self._total_classes),
+            source="train",
+            mode="train",
+            appendent=self._get_memory(),
+        )
+        self.train_loader = DataLoader(
+            train_dataset,
+            batch_size=self.args["batch_size"],
+            shuffle=True,
+            num_workers=num_workers,
+        )
+        test_dataset = data_manager.get_dataset(
+            np.arange(0, self._total_classes), source="test", mode="test"
+        )
+        self.test_loader = DataLoader(
+            test_dataset,
+            batch_size=self.args["batch_size"],
+            shuffle=False,
+            num_workers=num_workers,
+        )
+
+        if len(self._multiple_gpus) > 1:
+            self._network = nn.DataParallel(self._network, self._multiple_gpus)
+        self._eval(self.train_loader, self.test_loader)
+        self.build_rehearsal_memory(data_manager, self.samples_per_class)
+        if len(self._multiple_gpus) > 1:
+            self._network = self._network.module
+
     def train(self):
         self._network.train()
-        if len(self._multiple_gpus) > 1 :
+        if len(self._multiple_gpus) > 1:
             self._network_module_ptr = self._network.module
         else:
             self._network_module_ptr = self._network
@@ -88,7 +143,9 @@ class Learner(BaseLearner):
                 weight_decay=self.args["init_weight_decay"],
             )
             scheduler = optim.lr_scheduler.MultiStepLR(
-                optimizer=optimizer, milestones=self.args["init_milestones"], gamma=self.args["init_lr_decay"]
+                optimizer=optimizer,
+                milestones=self.args["init_milestones"],
+                gamma=self.args["init_lr_decay"],
             )
             self._init_train(train_loader, test_loader, optimizer, scheduler)
         else:
@@ -99,7 +156,9 @@ class Learner(BaseLearner):
                 weight_decay=self.args["weight_decay"],
             )
             scheduler = optim.lr_scheduler.MultiStepLR(
-                optimizer=optimizer, milestones=self.args["milestones"], gamma=self.args["lrate_decay"]
+                optimizer=optimizer,
+                milestones=self.args["milestones"],
+                gamma=self.args["lrate_decay"],
             )
             self._update_representation(train_loader, test_loader, optimizer, scheduler)
             # if len(self._multiple_gpus) > 1:
@@ -108,6 +167,9 @@ class Learner(BaseLearner):
             #     )
             # else:
             #     self._network.weight_align(self._total_classes - self._known_classes)
+
+    def _eval(self, train_loader, test_loader):
+        self._network.to(self._device)
 
     def _init_train(self, train_loader, test_loader, optimizer, scheduler):
         prog_bar = tqdm(range(self.args["init_epoch"]))

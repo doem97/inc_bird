@@ -65,24 +65,6 @@ def load_json(setting_path):
     return param
 
 
-def predict_on_images(folder_path, model, transform):
-    """Predict on a folder of images using the given model."""
-    predictions = {}
-
-    for image_name in os.listdir(folder_path):
-        image_path = os.path.join(folder_path, image_name)
-        image = Image.open(image_path).convert("RGB")
-        image_tensor = transform(image).unsqueeze(0)
-        with torch.no_grad():
-            outputs = model._network(
-                image_tensor
-            )  # assuming the model structure you've provided
-            _, predicted = outputs.max(1)
-            predictions[image_name] = predicted.item()
-
-    return predictions
-
-
 def inference(args):
     _set_random(args["seed"])
     _set_device(args)
@@ -116,12 +98,9 @@ def inference(args):
     for task in tqdm(range(data_manager.nb_tasks)):
         model.set_eval_model(data_manager)
 
-        # Save model checkpoint after each task
-        checkpoint_path = "./outputs/{}/{}_{}_{}".format(
-            args["config_id"], args["model_name"], args["dataset"], args["increment"]
-        )
-        if not os.path.exists(checkpoint_path):
-            os.makedirs(checkpoint_path)
+        # Load model checkpoint
+        checkpoint_path = "./outputs/{}/ckpts".format(args["config_id"])
+        os.makedirs(checkpoint_path, exist_ok=True)
         checkpoint_filename = "{}/task_{}.pkl".format(checkpoint_path, task)
         checkpoint = torch.load(checkpoint_filename)
         model._network.load_state_dict(checkpoint["model_state_dict"])
@@ -135,37 +114,24 @@ def inference(args):
         if not os.path.exists(nme_output_dir):
             os.makedirs(nme_output_dir)
 
-        loader = DataLoader(
-            dataset, batch_size=32, shuffle=False
-        )  # Assuming batch size of 32, adjust as necessary
-        # cnn_accy, nme_accy = model.eval_and_save()
-        # y_pred_cnn, y_pred_nme = model.inference_only(loader)
+        loader = DataLoader(dataset, batch_size=32, shuffle=False)
         y_pred_cnn, y_pred_nme, file_names = model.inference_only(loader)
-        paired_results_cnn = list(zip(file_names, y_pred_cnn))
-        # Sorting the paired results based on filename
-        paired_results_cnn.sort(key=lambda x: x[0])
-        # Writing sorted results to the file
 
-        paired_results_nme = list(zip(file_names, y_pred_nme))
-        # Sorting the paired results based on filename
-        paired_results_nme.sort(key=lambda x: x[0])
-        # Writing sorted results to the file
+        # Save CNN results
+        paired_results_cnn = list(zip(file_names, y_pred_cnn))
+        paired_results_cnn.sort(key=lambda x: x[0])
         with open(os.path.join(cnn_output_dir, f"result_{task+1}.txt"), "w") as f:
             for filename, pred in paired_results_cnn:
                 f.write(f"{filename} {pred}\n")
-        with open(os.path.join(nme_output_dir, f"result_{task+1}.txt"), "w") as f:
-            for filename, pred in paired_results_nme:
-                f.write(f"{filename} {pred}\n")
+
+        # Save NME results
+        # paired_results_nme = list(zip(file_names, y_pred_nme))
+        # paired_results_nme.sort(key=lambda x: x[0])
+        # with open(os.path.join(nme_output_dir, f"result_{task+1}.txt"), "w") as f:
+        #     for filename, pred in paired_results_nme:
+        #         f.write(f"{filename} {pred}\n")
 
         model.after_task()
-        # predictions = predict_on_images(args["test_images_dir"], model, transform)
-
-        # output_dir = "./outputs/{}/results/".format(args["config_id"])
-        # if not os.path.exists(output_dir):
-        #     os.makedirs(output_dir)
-        # with open(f"{output_dir}/result_{task}.txt", "w") as f:
-        #     for image_name, pred in predictions.items():
-        #         f.write(f"{image_name} {pred}\n")
 
 
 def main(args):
